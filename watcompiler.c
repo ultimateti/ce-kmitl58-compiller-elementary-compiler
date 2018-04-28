@@ -43,7 +43,7 @@ struct symbol* lookup (char* sym) {
       return sp;
     }
 
-    if (++sp >= symtab+NHASH){
+    if (++sp >= symtab + SEED){
       sp = symtab;    /* try the next entry */
     }
   }
@@ -60,7 +60,7 @@ struct ast* newNode (struct ast* l, struct ast* r, int nodetype) {
     exit(0);
   }
 
-  tmp->nodetype = tmptype;
+  tmp->nodetype = nodetype;
   tmp->l = l;
   tmp->r = r;
 
