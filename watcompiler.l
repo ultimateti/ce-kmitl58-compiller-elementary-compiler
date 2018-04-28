@@ -38,8 +38,6 @@
 "printd"          { return (CMD_PD); }
 "ife"             { return (TK_IFE); }
 "von"             { return (TK_VON); }
-\\\n              {  }
-^\n               {  }
 \n                {  }
 .                 { yyerror("Mystery character %c\n", *yytext); }
 %%
