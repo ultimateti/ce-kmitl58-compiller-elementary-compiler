@@ -32,10 +32,10 @@
 %%
 
 program:
-| program stmt    {   
-                                eval($2);
-                                freeNode($2);
-                            }
+| program stmt      {   
+                      eval($2);
+                      freeNode($2);
+                    }
 | program error     { yyerrok; }
 ;
 
@@ -68,10 +68,10 @@ term:
 block:
                             { $$ = NULL; }
 | stmt block                { 
-                                if ($2 == NULL) {
-                                    $$ = $1;
-                                } else {
-                                    $$ = newNode($1, $2, 'B');
-                                }
+                              if ($2 == NULL) {
+                                $$ = $1;
+                              } else {
+                                $$ = newNode($1, $2, 'B');
+                              }
                             }
 ;
