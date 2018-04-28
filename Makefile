@@ -1,4 +1,4 @@
-all: watcompiler
+all: watcompiler clean run
 
 watcompiler: watcompiler.c watcompiler.l watcompiler.y watcompiler.h
 	bison -d watcompiler.y
