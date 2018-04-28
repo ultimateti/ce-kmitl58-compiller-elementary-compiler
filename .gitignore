@@ -1,3 +1,4 @@
 *.lex.c
 *.tab.c
 *.tab.h
+watcompiler
