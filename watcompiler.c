@@ -336,17 +336,15 @@ int64_t eval (struct ast* node) {
 
 void yyerror (char *s, ...)
 {
-    va_list ap;
-    va_start(ap, s);
+  va_list ap;
+  va_start(ap, s);
 
-    fprintf(stderr, "%d: error: ", yylineno);
-    vfprintf(stderr, s, ap);
-    fprintf(stderr, "\n");
+  fprintf(stderr, "%d: error: ", yylineno);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
 }
 
 int main(int argc, char **argv)
 {
-    printf("> ");
-
-    return yyparse();
+  return yyparse();
 }

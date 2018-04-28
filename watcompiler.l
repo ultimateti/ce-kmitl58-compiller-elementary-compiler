@@ -40,7 +40,7 @@
 "von"             { return (TK_VON); }
 \\\n              {  }
 ^\n               {  }
-\n                { return (TK_NEWLINE); }
+\n                {  }
 .                 { yyerror("Mystery character %c\n", *yytext); }
 %%
 

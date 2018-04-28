@@ -32,15 +32,15 @@
 %%
 
 program:
-| program stmt TK_NEWLINE   {   
+| program stmt    {   
                                 eval($2);
                                 freeNode($2);
                             }
-| program error TK_NEWLINE    { yyerrok; }
+| program error     { yyerrok; }
 ;
 
 stmt:
-  exp ';'
+  exp ';' 
 | TK_IFE '(' exp ',' exp ')' '{' block '}'      { $$ = newIfe($3, $5, $8); }
 | TK_VON '(' exp ',' exp ')' '{' block '}'      { $$ = newVon($3, $5, $8); }
 ;
@@ -67,11 +67,11 @@ term:
 
 block:
                             { $$ = NULL; }
-| exp ';' block             { 
-                                if ($3 == NULL) {
+| stmt block                { 
+                                if ($2 == NULL) {
                                     $$ = $1;
                                 } else {
-                                    $$ = newNode($1, $3, 'B');
+                                    $$ = newNode($1, $2, 'B');
                                 }
                             }
 ;
