@@ -55,9 +55,9 @@ exp:
 | exp '%' exp               { $$ = newNode($1, $3, '%'); }
 | '^' exp %prec NEG         { $$ = newNode($2, NULL, '^'); }
 | '(' exp ')'               { $$ = $2; }
-| CMD_PS '(' TEXT ')'       { $$ = newPrintStmt(NULL, $3, 'S'); }
-| CMD_PD '(' exp ')'        { $$ = newPrintStmt($3, NULL, 'D'); }
-| CMD_PH '(' exp ')'        { $$ = newPrintStmt($3, NULL, 'H'); }
+| CMD_PS TEXT               { $$ = newPrintStmt(NULL, $2, 'S'); }
+| CMD_PD exp                { $$ = newPrintStmt($2, NULL, 'D'); }
+| CMD_PH exp                { $$ = newPrintStmt($2, NULL, 'H'); }
 ;
 
 term:
