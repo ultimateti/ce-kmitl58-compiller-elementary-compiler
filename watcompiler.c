@@ -12,8 +12,12 @@
 
 static uint8_t offsetCount = 0;
 static uint8_t branchCount = 0;
-static uint8_t litstrCount = 2;
+static uint8_t litstrCount = 3;
 static uint8_t symCount = 0;
+
+static FILE *fp;
+static char *text;
+static char *data;
 
 /* symbol table */
 /* hash a symbol */
@@ -39,7 +43,9 @@ struct symbol* lookup (char* sym) {
     if (!sp->name) {    /* new entry */
       sp->name = strdup(sym);
       sp->value = 0;
+      sp->offset = 0;
 
+      ++symCount;
       return sp;
     }
 
@@ -95,6 +101,11 @@ struct ast* newPrintStmt (struct ast *exp, char *str, int nodetype) {
   if (nodetype == 'D' || nodetype == 'H') {
     tmp->arg.exp = exp;
   } else {
+    char buf[21];
+
+    sprintf(buf, "LC%u", litstrCount);
+    data = buildDataSection(data, defineString(buf, str));
+
     ls->str = str;
     ls->label = litstrCount++;
     tmp->arg.ls = ls;
@@ -332,6 +343,217 @@ int64_t eval (struct ast* node) {
   }
 
   return v;
+}
+
+void asmGen (struct ast* node) {
+  struct symbol *s;
+  char buf[21];
+
+  if (!node) {
+    yyerror("internal error, null node");
+    return;
+  }
+
+  switch (node->nodetype) {
+    /* constant */
+    case 'N':
+      text = genText(text, sub("$8", "%rsp"));
+      sprintf(buf, "$%ld", ((struct numval*)node)->number);
+      text = genText(text, movl(buf, "%eax"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+      break;
+      
+    /*num reference */
+    case 'V':
+      s = lookup(((struct symasgn*)node)->s->name);
+
+      if (s->offset == 0) {
+        s->offset = (++offsetCount) * 8;
+        sprintf(buf, "-%u(%%rbp)", s->offset);
+        text = genText(text, movq("$0", buf));
+      }
+
+      sprintf(buf, "-%u(%%rbp)", s->offset);
+      text = genText(text, movq(buf, "%rax"));
+      text = genText(text, sub("$8", "%rsp"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+
+      break;
+
+    /* print expression */
+    case 'D':
+      asmGen(((struct print*)node)->arg.exp);
+
+      //printf("\n# print A\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, movq("%rax", "%rsi"));
+      text = genText(text, movl("$.LC0", "%edi"));
+      text = genText(text, movl("$0", "%eax"));
+      text = genText(text, sysCallPrint());
+
+      break;
+
+    case 'H':
+      asmGen(((struct print*)node)->arg.exp);
+
+      //printf("\n# print A\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, movq("%rax", "%rsi"));
+      text = genText(text, movl("$.LC1", "%edi"));
+      text = genText(text, movl("$0", "%eax"));
+      text = genText(text, sysCallPrint());
+
+      break;
+        
+    /* print literal string */
+    case 'S':
+       //printf("\n# print S\n");
+      sprintf(buf, "$.LC%u", ((struct print*)node)->arg.ls->label);
+
+      text = genText(text, movl(buf, "%esi"));
+      text = genText(text, movl("$.LC2", "%edi"));
+      text = genText(text, movl("$0", "%eax"));
+      text = genText(text, sysCallPrint());
+
+      break;
+
+        
+    /* assignment */
+    case '=':
+      s = lookup(((struct symasgn*)node)->s->name);
+      if (s->offset == 0) {
+        s->offset = (++offsetCount) * 8;
+      }
+      asmGen(((struct symasgn*)node)->v);
+
+      //printf("\n# assignment\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      sprintf(buf, "-%u(%%rbp)", s->offset);
+      text = genText(text, movq("%rax", buf));
+      text = genText(text, sub("$8", "%rsp"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+
+      break;
+
+    /* expressions */
+    case '+':
+      asmGen(node->r);
+      asmGen(node->l);
+
+      //printf("\n# addition\n");
+      text = genText(text, movq("(%rsp)", "%rdx"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, add("%rdx", "%rax"));
+      text = genText(text, sub("$8", "%rsp"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+
+      break;
+
+    case '-':
+      asmGen(node->r);
+      asmGen(node->l);
+
+      //printf("\n# subtraction\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, sub("(%rsp)", "%rax"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+
+      break;
+
+    case '*':
+      asmGen(node->r);
+      asmGen(node->l);
+
+      //printf("\n# multiplication\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, imul("(%rsp)", "%rax"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+
+      break;
+      
+    case '/':
+      asmGen(node->r);
+      asmGen(node->l);
+
+      //printf("\n# division\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, cqto());
+      text = genText(text, idiv("(%rsp)"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+
+      break;
+
+    case '%':
+      asmGen(node->r);
+      asmGen(node->l);
+
+      //printf("\n# modulation\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, cqto());
+      text = genText(text, idiv("(%rsp)"));
+      text = genText(text, movq("%rdx", "(%rsp)"));
+
+      break;
+
+    case '^':
+      asmGen(node->l);
+
+      //printf("\n# Negation\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, neg("%rax"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+
+      break;
+
+    /* control flow */
+    /* null expressions allowed in the grammar, so check for them */
+
+    /* condition */
+    case 'C':
+      v = 0; /* a default value */
+
+      if (eval(((struct cond*)node)->fStmt) == eval(((struct cond*)node)->sStmt)) {
+        if (((struct cond*)node)->tl)
+          v = eval(((struct cond*)node)->tl);
+      }
+
+      break;
+
+    /* loop */
+    case 'L':
+      v = 0; /* a default value */
+
+      if (((struct loop*)node)->tl) {
+        int64_t count = eval(((struct loop*)node)->from);
+        int64_t to = eval(((struct loop*)node)->to);
+
+        while (count < to) {
+          v = eval(((struct loop*)node)->tl);
+          count++;
+        }
+      }
+
+      break;
+
+    /* list of statements */
+    case 'B':
+      asmGen(node->l);
+      asmGen(node->r);
+      break;
+
+    default:
+      printf("internal error: bad node %c\n", node->nodetype);
+  }
+
 }
 
 void yyerror (char *s, ...)

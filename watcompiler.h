@@ -89,7 +89,7 @@ struct ast* newVon (struct ast* from, struct ast* to, struct ast* tl);
 
 /* evaluate an ast */
 int64_t eval (struct ast* );
-void gen_asm (struct ast* );
+void asmGen (struct ast* );
 
 /* delete and free an ast */
 void freeNode (struct ast* );
