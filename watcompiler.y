@@ -33,7 +33,7 @@
 
 program:
 | program stmt      {   
-                      eval($2);
+                      asmGen($2);
                       freeNode($2);
                     }
 | program error     { yyerrok; }

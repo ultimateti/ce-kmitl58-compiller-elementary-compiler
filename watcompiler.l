@@ -19,7 +19,7 @@
 [0-9]+d           { yylval.num = (int64_t)atoi(yytext); return (NUM); }
 [0-9a-fA-F]+[hH]  { yylval.num = (int64_t)strToHex(yytext); return (NUM);}
 "_"[A-Z][A-Z]     { yylval.sym = lookup(yytext); return (VAR); }
-["].*["]          { yylval.str = stringify(yytext); return (TEXT); }
+["].*["]          { yylval.str = strdup(yytext); return (TEXT); }
 "=>"              { return (TK_ASSIGN); }
 "(" |
 ")" |

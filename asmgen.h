@@ -1,7 +1,7 @@
 #ifndef ASMGEN_INCLUDED
 #define ASMGEN_INCLUDED
 
-FILE* newFile(char* name);
+FILE* newFile(char* fname);
 void closeFile(FILE* fp);
 void putDataSec(FILE* fp, char dataSection[]);
 void putBssSec(FILE* fp, char bssSection[]);

@@ -16,7 +16,7 @@ void closeFile(FILE* fp) {
   FPS("\tleave\n");
   FPS("\t.cfi_def_cfa 7, 8\n");
   FPS("\tret\n");
-  FPS("\t.cfi_endproc"\n);
+  FPS("\t.cfi_endproc\n");
   FPS(".LFE0:\n");
   FPS("\t.size main, .-main\n");
   FPS("\t.ident \"GCC: (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\"\n");
@@ -30,12 +30,12 @@ void putDataSec(FILE* fp, char dataSection[]) {
   FPS("\t.section .rodata\n");
   FPS(".LC0:\n");
   FPS("\t.string \"%ld\"\n");
-  FPS(".LC1\n");
+  FPS(".LC1:\n");
   FPS("\t.string \"%Xh\"\n");
-  FPS(".LC2\n");
+  FPS(".LC2:\n");
   FPS("\t.string \"%s\"\n");
 
-	FPS(datasection);
+	FPS(dataSection);
   free(dataSection);
 }
 
@@ -48,9 +48,8 @@ void putBssSec(FILE* fp, char bssSection[]) {
   FPS("\t.size\tfrom, 8\n");
   FPS("from:\n");
   FPS("\t.zero\t8\n");
-
 	FPS(bssSection);
-  free(bssSection);
+  // free(bssSection);
 }
 
 void putTextSec(FILE* fp, char textSection[]) {

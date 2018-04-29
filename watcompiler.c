@@ -9,6 +9,7 @@
 #include <math.h>
 
 #include "watcompiler.h"
+#include "asmgen.h"
 
 static uint8_t offsetCount = 0;
 static uint8_t branchCount = 0;
@@ -104,7 +105,7 @@ struct ast* newPrintStmt (struct ast *exp, char *str, int nodetype) {
     char buf[21];
 
     sprintf(buf, "LC%u", litstrCount);
-    data = buildDataSection(data, defineString(buf, str));
+    data = genData(data, newString(buf, str));
 
     ls->str = str;
     ls->label = litstrCount++;
@@ -357,6 +358,7 @@ void asmGen (struct ast* node) {
   switch (node->nodetype) {
     /* constant */
     case 'N':
+      // printf("\n# gen N\n");
       text = genText(text, sub("$8", "%rsp"));
       sprintf(buf, "$%ld", ((struct numval*)node)->number);
       text = genText(text, movl(buf, "%eax"));
@@ -365,6 +367,7 @@ void asmGen (struct ast* node) {
       
     /*num reference */
     case 'V':
+      // printf("\n# gen V\n");
       s = lookup(((struct symasgn*)node)->s->name);
 
       if (s->offset == 0) {
@@ -384,38 +387,38 @@ void asmGen (struct ast* node) {
     case 'D':
       asmGen(((struct print*)node)->arg.exp);
 
-      //printf("\n# print A\n");
+      // printf("\n# print D\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, movq("%rax", "%rsi"));
       text = genText(text, movl("$.LC0", "%edi"));
       text = genText(text, movl("$0", "%eax"));
-      text = genText(text, sysCallPrint());
+      text = genText(text, syscallPrint());
 
       break;
 
     case 'H':
       asmGen(((struct print*)node)->arg.exp);
 
-      //printf("\n# print A\n");
+      // printf("\n# print H\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, movq("%rax", "%rsi"));
       text = genText(text, movl("$.LC1", "%edi"));
       text = genText(text, movl("$0", "%eax"));
-      text = genText(text, sysCallPrint());
+      text = genText(text, syscallPrint());
 
       break;
         
     /* print literal string */
     case 'S':
-       //printf("\n# print S\n");
+      // printf("\n# print S\n");
       sprintf(buf, "$.LC%u", ((struct print*)node)->arg.ls->label);
 
       text = genText(text, movl(buf, "%esi"));
       text = genText(text, movl("$.LC2", "%edi"));
       text = genText(text, movl("$0", "%eax"));
-      text = genText(text, sysCallPrint());
+      text = genText(text, syscallPrint());
 
       break;
 
@@ -428,7 +431,7 @@ void asmGen (struct ast* node) {
       }
       asmGen(((struct symasgn*)node)->v);
 
-      //printf("\n# assignment\n");
+      // printf("\n# assignment\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       sprintf(buf, "-%u(%%rbp)", s->offset);
@@ -443,7 +446,7 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      //printf("\n# addition\n");
+      // printf("\n# addition\n");
       text = genText(text, movq("(%rsp)", "%rdx"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, movq("(%rsp)", "%rax"));
@@ -458,7 +461,7 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      //printf("\n# subtraction\n");
+      // printf("\n# subtraction\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, sub("(%rsp)", "%rax"));
@@ -470,7 +473,7 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      //printf("\n# multiplication\n");
+      // printf("\n# multiplication\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, imul("(%rsp)", "%rax"));
@@ -482,7 +485,7 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      //printf("\n# division\n");
+      // printf("\n# division\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, cqto());
@@ -495,7 +498,7 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      //printf("\n# modulation\n");
+      // printf("\n# modulation\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, cqto());
@@ -507,7 +510,7 @@ void asmGen (struct ast* node) {
     case '^':
       asmGen(node->l);
 
-      //printf("\n# Negation\n");
+      // printf("\n# Negation\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, neg("%rax"));
       text = genText(text, movq("%rax", "(%rsp)"));
@@ -519,27 +522,58 @@ void asmGen (struct ast* node) {
 
     /* condition */
     case 'C':
-      v = 0; /* a default value */
+      // printf("\n# Condition\n");
+      asmGen(((struct cond*)node)->sStmt);
+      asmGen(((struct cond*)node)->fStmt);
 
-      if (eval(((struct cond*)node)->fStmt) == eval(((struct cond*)node)->sStmt)) {
-        if (((struct cond*)node)->tl)
-          v = eval(((struct cond*)node)->tl);
-      }
+      // printf("\n# subtraction\n");
+      text = genText(text, movq("(%rsp)", "%rax"));
+      text = genText(text, add("$8", "%rsp"));
+      text = genText(text, sub("(%rsp)", "%rax"));
+      text = genText(text, movq("%rax", "(%rsp)"));
+      
+      
+      text = genText(text, cmp("$0", "(%rsp)"));
+      sprintf(buf, "L%u", branchCount);
+      text = genText(text, newJump("jne", buf));
+
+      if (((struct cond*)node)->tl)
+          asmGen(((struct cond*)node)->tl);
+
+      sprintf(buf, "L%u", branchCount++);
+      text = genText(text, newLabel(buf));
 
       break;
 
     /* loop */
     case 'L':
-      v = 0; /* a default value */
-
       if (((struct loop*)node)->tl) {
-        int64_t count = eval(((struct loop*)node)->from);
-        int64_t to = eval(((struct loop*)node)->to);
+        // printf("\n# Loop\n");
 
-        while (count < to) {
-          v = eval(((struct loop*)node)->tl);
-          count++;
-        }
+        sprintf(buf, "$%ld", eval(((struct loop*)node)->from));
+        text = genText(text, movl(buf, "%eax"));
+        text = genText(text, movq("%rax", "from(%rip)"));
+        sprintf(buf, "L%u", branchCount);
+        text = genText(text, newJump("jmp", buf));
+        sprintf(buf, "L%u", ++branchCount);
+        text = genText(text, newLabel(buf));
+
+        asmGen(((struct loop*)node)->tl);
+
+        text = genText(text, movq("from(%rip)", "%rdx"));
+        sprintf(buf, "$%ld", (int64_t)1);
+        text = genText(text, movl(buf, "%eax"));
+        text = genText(text, add("%rdx", "%rax"));
+        text = genText(text, movq("%rax", "from(%rip)"));
+        sprintf(buf, "L%u", (branchCount - 1));
+        text = genText(text, newLabel(buf));
+        sprintf(buf, "$%ld", eval(((struct loop*)node)->to));
+        text = genText(text, movl(buf, "%eax"));
+        text = genText(text, cmp("%rax", "from(%rip)"));
+        sprintf(buf, "L%u", branchCount);
+        text = genText(text, newJump("jle", buf));
+
+        ++branchCount;
       }
 
       break;
@@ -568,5 +602,53 @@ void yyerror (char *s, ...)
 
 int main(int argc, char **argv)
 {
-  return yyparse();
+  extern FILE *yyin;
+  char *asmFile;
+  char *ptr;
+  char buf[21];
+
+  if (argc > 1) {
+      if (!(yyin = fopen(argv[1], "r"))) {
+          perror(argv[1]);
+          return 1;
+      }
+  }
+  else {
+      printf("\nPlease specify a source file.\n\n");
+      return 1;
+  }
+
+  text = (char *) malloc(sizeof(char));
+  data = (char *) malloc(sizeof(char));
+  *(text) = '\0';
+  *(data) = '\0';
+
+  asmFile = strdup(argv[1]);
+  ptr = strchr(asmFile, '.');
+
+  *(ptr+1) = 's';
+  *(ptr+2) = '\0';
+
+  fp = newFile(asmFile);
+
+  printf("Start Parsing ...\n");
+  printf("...\n");
+  printf("...\n");
+
+  if (yyparse()) {
+    printf("\nParsing Error\n");
+    // closeFile(fp);
+    return -1;
+  }
+
+  sprintf(buf, "$%u", (symCount + 1) * 8);
+  text = genText(sub(buf, "%rsp"), text);
+  putBssSec(fp, "");
+  putDataSec(fp, data);
+  putTextSec(fp, text);
+  closeFile(fp);
+
+  printf("Finished Parsing\n");
+
+  return 0;
 }
