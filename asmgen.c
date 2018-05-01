@@ -204,6 +204,26 @@ char* cmp(char* s1, char* s2) {
   return result;
 }
 
+char* push(char* s1) {
+  char psh[] = "\tpushq\t ";
+  char* result = malloc(strlen(psh) + strlen("\n") + strlen(s1) + 1);
+  strcpy(result, psh);
+  strcat(result, s1);
+	strcat(result, "\n");
+	
+  return result;
+}
+
+char* pop(char* s1) {
+  char pp[] = "\tpopq\t ";
+  char* result = malloc(strlen(pp) + strlen("\n") + strlen(s1) + 1);
+  strcpy(result, pp);
+  strcat(result, s1);
+	strcat(result, "\n");
+	
+  return result;
+}
+
 char* newString(char* lc, char* str) {
 	char string[] = "\t.string";
 	char* result = malloc(strlen(lc) + strlen(str) + strlen(string) + strlen("\"") + strlen("\"") + strlen(":") + 6);

@@ -349,6 +349,7 @@ int64_t eval (struct ast* node) {
 void asmGen (struct ast* node) {
   struct symbol *s;
   char buf[21];
+  uint8_t condBranchNum, loopBranchNum;
 
   if (!node) {
     yyerror("internal error, null node");
@@ -522,6 +523,8 @@ void asmGen (struct ast* node) {
 
     /* condition */
     case 'C':
+      condBranchNum = branchCount++;
+
       // printf("\n# Condition\n");
       asmGen(((struct cond*)node)->sStmt);
       asmGen(((struct cond*)node)->fStmt);
@@ -534,14 +537,15 @@ void asmGen (struct ast* node) {
       
       
       text = genText(text, cmp("$0", "(%rsp)"));
-      sprintf(buf, "L%u", branchCount);
+      sprintf(buf, "L%u", condBranchNum);
       text = genText(text, newJump("jne", buf));
 
       if (((struct cond*)node)->tl)
           asmGen(((struct cond*)node)->tl);
 
-      sprintf(buf, "L%u", branchCount++);
+      sprintf(buf, "L%u", condBranchNum);
       text = genText(text, newLabel(buf));
+      text = genText(text, add("$8", "%rsp"));
 
       break;
 
@@ -549,31 +553,30 @@ void asmGen (struct ast* node) {
     case 'L':
       if (((struct loop*)node)->tl) {
         // printf("\n# Loop\n");
+        
+        loopBranchNum = branchCount; //1
+        branchCount += 2;
+        
+        text = genText(text, push("%rbx"));
 
         sprintf(buf, "$%ld", eval(((struct loop*)node)->from));
-        text = genText(text, movl(buf, "%eax"));
-        text = genText(text, movq("%rax", "from(%rip)"));
-        sprintf(buf, "L%u", branchCount);
+        text = genText(text, (movq(buf, "%rbx")));
+        sprintf(buf, "L%u", loopBranchNum);
         text = genText(text, newJump("jmp", buf));
-        sprintf(buf, "L%u", ++branchCount);
+        sprintf(buf, "L%u", loopBranchNum + 1);
         text = genText(text, newLabel(buf));
 
         asmGen(((struct loop*)node)->tl);
 
-        text = genText(text, movq("from(%rip)", "%rdx"));
-        sprintf(buf, "$%ld", (int64_t)1);
-        text = genText(text, movl(buf, "%eax"));
-        text = genText(text, add("%rdx", "%rax"));
-        text = genText(text, movq("%rax", "from(%rip)"));
-        sprintf(buf, "L%u", (branchCount - 1));
+        text = genText(text, add("$1", "%rbx"));
+        sprintf(buf, "L%u", loopBranchNum);
         text = genText(text, newLabel(buf));
-        sprintf(buf, "$%ld", eval(((struct loop*)node)->to));
-        text = genText(text, movl(buf, "%eax"));
-        text = genText(text, cmp("%rax", "from(%rip)"));
-        sprintf(buf, "L%u", branchCount);
+        sprintf(buf, "$%ld", eval(((struct loop*)node)->to) - 1);
+        text = genText(text, cmp(buf, "%rbx"));
+        sprintf(buf, "L%u", loopBranchNum + 1);
         text = genText(text, newJump("jle", buf));
-
-        ++branchCount;
+        
+        text = genText(text, pop("%rbx"));
       }
 
       break;

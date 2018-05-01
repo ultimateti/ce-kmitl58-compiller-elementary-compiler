@@ -18,6 +18,8 @@ char* imul(char* s1, char* s2);
 char* idiv(char* s1);
 char* neg(char* s1);
 char* cmp(char* s1, char* s2);
+char* push(char* s1);
+char* pop(char* s1);
 char* newString(char* lc, char* str);
 char* newLabel(char* label);
 char* newJump(char* mode, char* label);

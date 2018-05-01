@@ -1,4 +1,4 @@
-all: watcompiler clean run
+all: watcompiler run
 
 watcompiler: watcompiler.c watcompiler.l watcompiler.y watcompiler.h asmgen.c asmgen.h
 	bison -d watcompiler.y
@@ -10,5 +10,5 @@ clean:
 
 run:
 	./watcompiler tstinput.in
-	gcc tstinput.s -o tst_input
+	gcc tstinput.s -o tst_input -ggdb
 	./tst_input
