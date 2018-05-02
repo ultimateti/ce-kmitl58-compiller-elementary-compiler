@@ -125,7 +125,7 @@ char* movl(char s1[], char s2[]) {
 }
 
 char* add(char* s1, char* s2) {
-	char add[] = "\taddq\t ";
+	char add[] = "\taddq\t";
 	char comma[] = ", ";
 	char* result = malloc(strlen(add) + strlen(comma) + strlen("\n") + strlen(s1) + strlen(s2) + 1);
 	strcpy(result, add);
@@ -145,7 +145,7 @@ char* cqto() {
 }
 
 char* sub(char* s1, char* s2) {
-	char sub[] = "\tsubq\t ";
+	char sub[] = "\tsubq\t";
 	char comma[] = ", ";
 	char* result = malloc(strlen(sub) + strlen(comma) + strlen("\n") + strlen(s1) + strlen(s2) + 1);
 	strcpy(result, sub);
@@ -171,7 +171,7 @@ char* imul(char* s1, char* s2) {
 }
 
 char* idiv(char* s1) {
-	char idv[] = "\tidivq\t ";
+	char idv[] = "\tidivq\t";
 	char* result = malloc(strlen(idv) + strlen("\n") + strlen(s1) + 1);
 	strcpy(result, idv);
   strcat(result, s1);
@@ -191,7 +191,7 @@ char* neg(char* s1) {
 }
 
 char* cmp(char* s1, char* s2) {
-	char cp[] = "\tcmpq\t ";
+	char cp[] = "\tcmpq\t";
 	char comma[] = ", ";
 	char* result = malloc(strlen(cp) + strlen(comma) + strlen("\n") + strlen(s1) + strlen(s2) + 1);
 	strcpy(result, cp);
@@ -204,7 +204,7 @@ char* cmp(char* s1, char* s2) {
 }
 
 char* push(char* s1) {
-  char psh[] = "\tpushq\t ";
+  char psh[] = "\tpushq\t";
   char* result = malloc(strlen(psh) + strlen("\n") + strlen(s1) + 1);
   strcpy(result, psh);
   strcat(result, s1);
@@ -214,7 +214,7 @@ char* push(char* s1) {
 }
 
 char* pop(char* s1) {
-  char pp[] = "\tpopq\t ";
+  char pp[] = "\tpopq\t";
   char* result = malloc(strlen(pp) + strlen("\n") + strlen(s1) + 1);
   strcpy(result, pp);
   strcat(result, s1);
