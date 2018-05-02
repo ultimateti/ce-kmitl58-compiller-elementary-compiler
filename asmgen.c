@@ -261,7 +261,6 @@ char* newJump(char* mode, char* label) {
 
 
 char* syscallPrint(){
-	//int	0x80		; call kernel
   char* pushC = "\tpushq\t%rcx\n";
 	char* sysCall = "\tcall	printf\n";
   char* popC = "\tpopq\t%rcx\n";

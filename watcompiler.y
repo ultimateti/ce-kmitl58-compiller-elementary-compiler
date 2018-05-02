@@ -12,7 +12,6 @@
     char* str;
 }
 
-
 %token<str> TEXT
 %token<num> NUM
 %token<sym> VAR
@@ -23,7 +22,7 @@
 %right TK_ASSIGN
 %left '+' '-'
 %left '*' '/' '%'
-%nonassoc NEG   /* negation--unary minus */
+%nonassoc NEG
 
 %type <node> stmt exp term block
 
