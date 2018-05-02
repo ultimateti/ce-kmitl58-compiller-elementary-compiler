@@ -10,5 +10,5 @@ clean:
 
 run:
 	./watcompiler tstinput.in
-	gcc tstinput.s -o tst_input -ggdb
-	./tst_input
+	gcc tstinput.s -o tstinput -ggdb
+	./tstinput
