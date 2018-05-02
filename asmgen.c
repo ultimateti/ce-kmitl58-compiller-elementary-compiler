@@ -49,7 +49,6 @@ void putBssSec(FILE* fp, char bssSection[]) {
   FPS("from:\n");
   FPS("\t.zero\t8\n");
 	FPS(bssSection);
-  // free(bssSection);
 }
 
 void putTextSec(FILE* fp, char textSection[]) {
@@ -258,7 +257,6 @@ char* newJump(char* mode, char* label) {
   
   return result;
 }
-
 
 char* syscallPrint(){
   char* pushC = "\tpushq\t%rcx\n";
