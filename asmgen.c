@@ -262,9 +262,13 @@ char* newJump(char* mode, char* label) {
 
 char* syscallPrint(){
 	//int	0x80		; call kernel
+  char* pushC = "\tpushq\t%rcx\n";
 	char* sysCall = "\tcall	printf\n";
-	char* result = malloc(strlen(sysCall) + 1);
-	strcpy(result, sysCall);
+  char* popC = "\tpopq\t%rcx\n";
+	char* result = malloc(strlen(pushC) + strlen(sysCall) + strlen(popC) + 1);
+  strcpy(result, pushC);
+  strcat(result, sysCall);
+  strcat(result, popC);
 	
   return result;
 }

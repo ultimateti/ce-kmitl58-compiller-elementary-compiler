@@ -557,10 +557,10 @@ void asmGen (struct ast* node) {
         loopBranchNum = branchCount; //1
         branchCount += 2;
         
-        text = genText(text, push("%rbx"));
+        text = genText(text, push("%rcx"));
 
         sprintf(buf, "$%ld", eval(((struct loop*)node)->from));
-        text = genText(text, (movq(buf, "%rbx")));
+        text = genText(text, (movq(buf, "%rcx")));
         sprintf(buf, "L%u", loopBranchNum);
         text = genText(text, newJump("jmp", buf));
         sprintf(buf, "L%u", loopBranchNum + 1);
@@ -568,15 +568,15 @@ void asmGen (struct ast* node) {
 
         asmGen(((struct loop*)node)->tl);
 
-        text = genText(text, add("$1", "%rbx"));
+        text = genText(text, add("$1", "%rcx"));
         sprintf(buf, "L%u", loopBranchNum);
         text = genText(text, newLabel(buf));
         sprintf(buf, "$%ld", eval(((struct loop*)node)->to) - 1);
-        text = genText(text, cmp(buf, "%rbx"));
+        text = genText(text, cmp(buf, "%rcx"));
         sprintf(buf, "L%u", loopBranchNum + 1);
         text = genText(text, newJump("jle", buf));
         
-        text = genText(text, pop("%rbx"));
+        text = genText(text, pop("%rcx"));
       }
 
       break;
