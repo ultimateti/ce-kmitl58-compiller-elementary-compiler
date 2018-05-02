@@ -36,7 +36,7 @@ program:
                       asmGen($2);
                       freeNode($2);
                     }
-| program error     { yyerrok; }
+| program error ';' { yyerrok; }
 ;
 
 stmt:
