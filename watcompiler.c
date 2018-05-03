@@ -1,7 +1,3 @@
-/*
- * helper functions for calculator
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -34,14 +30,15 @@ static unsigned symhash (char* sym) {
 
 struct symbol* lookup (char* sym) {
   struct symbol* sp = &symtab[symhash(sym) % SEED];
-  int scount = SEED;     /* how many have we looked at */
+  int scount = SEED;
 
   while (--scount >= 0) {
     if (sp->name && !strcmp(sp->name, sym)) {
       return sp;
     }
 
-    if (!sp->name) {    /* new entry */
+    // new entry
+    if (!sp->name) {    
       sp->name = strdup(sym);
       sp->value = 0;
       sp->offset = 0;
@@ -50,15 +47,18 @@ struct symbol* lookup (char* sym) {
       return sp;
     }
 
+    // if hash collition happens
     if (++sp >= symtab + SEED){
-      sp = symtab;    /* try the next entry */
+      sp = symtab;   
     }
   }
 
+  // if hash table is full
   yyerror("symbol table overflow\n");
-  abort(); /* tried them all, table is full */
+  abort();
 }
 
+// create new node in ast
 struct ast* newNode (struct ast* l, struct ast* r, int nodetype) {
   struct ast* tmp = (struct ast*) malloc(sizeof(struct ast));
 
@@ -74,6 +74,7 @@ struct ast* newNode (struct ast* l, struct ast* r, int nodetype) {
   return tmp;
 }
 
+// create new constant number
 struct ast* newNum (int64_t num) {
     struct numval* tmp = (struct numval*) malloc(sizeof(struct numval));
 
@@ -88,6 +89,7 @@ struct ast* newNum (int64_t num) {
     return (struct ast*) tmp;
 }
 
+// create new print node
 struct ast* newPrintStmt (struct ast *exp, char *str, int nodetype) {
   struct print *tmp = (struct print*) malloc(sizeof(struct print));
   struct lString *ls = (struct lString*) malloc(sizeof(struct lString));
@@ -99,11 +101,14 @@ struct ast* newPrintStmt (struct ast *exp, char *str, int nodetype) {
 
   tmp->nodetype = nodetype;
 
+  // if we desire to create print decimal or hex
   if (nodetype == 'D' || nodetype == 'H') {
     tmp->arg.exp = exp;
   } else {
+    // else we wants to create print string
     char buf[21];
 
+    // create new string and put into data section
     sprintf(buf, "LC%u", litstrCount);
     data = genData(data, newString(buf, str));
 
@@ -115,7 +120,10 @@ struct ast* newPrintStmt (struct ast *exp, char *str, int nodetype) {
   return (struct ast*) tmp;
 }
 
+// create new variable node
 struct ast* newVar (struct symbol *s) {
+
+  // allocate in hash table
   struct symref *tmp = (struct symref*) malloc(sizeof(struct symref));
 
   if (!tmp) {
@@ -129,6 +137,7 @@ struct ast* newVar (struct symbol *s) {
   return (struct ast*) tmp;
 }
 
+// create new variable assignment node
 struct ast* newAssign (struct symbol *s, struct ast* v) {
   struct symasgn *tmp = (struct symasgn*) malloc(sizeof(struct symasgn));
 
@@ -144,6 +153,7 @@ struct ast* newAssign (struct symbol *s, struct ast* v) {
   return (struct ast*) tmp;
 }
 
+// create new condition node
 struct ast* newIfe (struct ast* firstStmt, struct ast* secStmt, struct ast* tl) {
   struct cond *tmp = (struct cond*) malloc(sizeof(struct cond));
 
@@ -160,6 +170,7 @@ struct ast* newIfe (struct ast* firstStmt, struct ast* secStmt, struct ast* tl) 
   return (struct ast*) tmp;
 }
 
+// create new loop node
 struct ast* newVon (struct ast* from, struct ast* to, struct ast* tl) {
   struct loop* tmp = (struct loop*) malloc(sizeof(struct loop));
 
@@ -176,10 +187,10 @@ struct ast* newVon (struct ast* from, struct ast* to, struct ast* tl) {
   return (struct ast*) tmp;
 }
 
-/* free a tree of ASTs */
+// free a tree of ASTs 
 void freeNode (struct ast* node) {
   switch (node->nodetype) {
-    /* two subtrees */
+    // node with two subrtrees
     case '+':
     case '-':
     case '*':
@@ -188,33 +199,34 @@ void freeNode (struct ast* node) {
     case 'B':
       freeNode(node->r);
 
-    /* one subtrees */
+    // node with one subtree
     case '^':
       freeNode(node->l);
 
-    /* no subtree */
+    // node with no subtree
     case 'N':
     case 'V':
       break;
 
-    /* print expression */
+    // for print node, we need to free expression in
+    // command too
     case 'D':
     case 'H':
       freeNode(((struct print*)node)->arg.exp);
       break;
 
-    /* print string */
+    // for print string node, we need to free string
     case 'S':
       free(((struct print*)node)->arg.ls->str);
       free(((struct print*)node)->arg.ls);
       break;
 
-    /* assignment */
+    // assignment node
     case '=':
       freeNode(((struct symasgn*)node)->v);
       break;
 
-    /* condtion */
+    // condition node
     case 'C':
       freeNode(((struct cond*)node)->fStmt);
       freeNode(((struct cond*)node)->sStmt);
@@ -224,7 +236,7 @@ void freeNode (struct ast* node) {
 
       break;
 
-    /* loop */
+    // loop node
     case 'L':
       freeNode(((struct loop*)node)->from);
       freeNode(((struct loop*)node)->to);
@@ -238,12 +250,14 @@ void freeNode (struct ast* node) {
       printf("internal error: free bad node %c\n", node->nodetype);
   }
 
-  free(node); /*always free the node itself */
+  // finally, free node itself 
+  free(node);
 }
 
+// evaluate expression or statement
+// mostly are not used in generate ASM
 int64_t eval (struct ast* node) {
   int64_t v;
-  //int64_t count;
 
   if (!node) {
       yyerror("internal error, null eval");
@@ -252,38 +266,39 @@ int64_t eval (struct ast* node) {
   }
 
   switch (node->nodetype) {
-    /* constant */
+    // constant
     case 'N':
       v = ((struct numval*)node)->number;
       break;
       
-    /*num reference */
+    // variable reference
     case 'V':
       v = ((struct symref*)node)->s->value;
       break;
 
-    /* print expression */
+    // print decimal
     case 'D':
       v = eval(((struct print*)node)->arg.exp);
       printf("%ld", v);
       break;
 
+    // print hexadecimal
     case 'H':
       v = eval(((struct print*)node)->arg.exp);
       printf("%Xh", v);
       break;
         
-    /* print literal string */
+    // print string
     case 'S':
       printf("%s", (((struct print*)node)->arg.ls->str));
       break;
         
-    /* assignment */
+    // assignment
     case '=':
       v = ((struct symasgn*)node)->s->value = eval(((struct symasgn*)node)->v);
       break;
 
-    /* expressions */
+    // expressions
     case '+':
       v = eval(node->l) + eval(node->r);
       break;
@@ -303,12 +318,9 @@ int64_t eval (struct ast* node) {
       v = -eval(node->l);
       break;
 
-    /* control flow */
-    /* null expressions allowed in the grammar, so check for them */
-
-    /* condition */
+    // condition
     case 'C':
-      v = 0; /* a default value */
+      v = 0; 
 
       if (eval(((struct cond*)node)->fStmt) == eval(((struct cond*)node)->sStmt)) {
         if (((struct cond*)node)->tl)
@@ -317,9 +329,9 @@ int64_t eval (struct ast* node) {
 
       break;
 
-    /* loop */
+    // loop
     case 'L':
-      v = 0; /* a default value */
+      v = 0;
 
       if (((struct loop*)node)->tl) {
         int64_t count = eval(((struct loop*)node)->from);
@@ -333,7 +345,7 @@ int64_t eval (struct ast* node) {
 
       break;
 
-    /* list of statements */
+    // block statements
     case 'B':
       eval(node->l);
       v = eval(node->r);
@@ -346,6 +358,7 @@ int64_t eval (struct ast* node) {
   return v;
 }
 
+// generate ASM code
 void asmGen (struct ast* node) {
   struct symbol *s;
   char buf[21];
@@ -357,18 +370,16 @@ void asmGen (struct ast* node) {
   }
 
   switch (node->nodetype) {
-    /* constant */
+    // constant number
     case 'N':
-      // printf("\n# gen N\n");
       text = genText(text, sub("$8", "%rsp"));
       sprintf(buf, "$%ld", ((struct numval*)node)->number);
       text = genText(text, movl(buf, "%eax"));
       text = genText(text, movq("%rax", "(%rsp)"));
       break;
       
-    /*num reference */
+    // variable reference
     case 'V':
-      // printf("\n# gen V\n");
       s = lookup(((struct symasgn*)node)->s->name);
 
       if (s->offset == 0) {
@@ -384,11 +395,10 @@ void asmGen (struct ast* node) {
 
       break;
 
-    /* print expression */
+    // print decimal
     case 'D':
       asmGen(((struct print*)node)->arg.exp);
 
-      // printf("\n# print D\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, movq("%rax", "%rsi"));
@@ -398,10 +408,10 @@ void asmGen (struct ast* node) {
 
       break;
 
+    // print hexadecimal
     case 'H':
       asmGen(((struct print*)node)->arg.exp);
 
-      // printf("\n# print H\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, movq("%rax", "%rsi"));
@@ -411,9 +421,8 @@ void asmGen (struct ast* node) {
 
       break;
         
-    /* print literal string */
+    // print string
     case 'S':
-      // printf("\n# print S\n");
       sprintf(buf, "$.LC%u", ((struct print*)node)->arg.ls->label);
 
       text = genText(text, movl(buf, "%esi"));
@@ -424,15 +433,15 @@ void asmGen (struct ast* node) {
       break;
 
         
-    /* assignment */
+    // variable assignment
     case '=':
       s = lookup(((struct symasgn*)node)->s->name);
+      // if assign to new variable, find an offset for it
       if (s->offset == 0) {
         s->offset = (++offsetCount) * 8;
       }
       asmGen(((struct symasgn*)node)->v);
 
-      // printf("\n# assignment\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       sprintf(buf, "-%u(%%rbp)", s->offset);
@@ -442,12 +451,11 @@ void asmGen (struct ast* node) {
 
       break;
 
-    /* expressions */
+    // expressions
     case '+':
       asmGen(node->r);
       asmGen(node->l);
 
-      // printf("\n# addition\n");
       text = genText(text, movq("(%rsp)", "%rdx"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, movq("(%rsp)", "%rax"));
@@ -462,7 +470,6 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      // printf("\n# subtraction\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, sub("(%rsp)", "%rax"));
@@ -474,7 +481,6 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      // printf("\n# multiplication\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, imul("(%rsp)", "%rax"));
@@ -486,7 +492,6 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      // printf("\n# division\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, cqto());
@@ -499,7 +504,6 @@ void asmGen (struct ast* node) {
       asmGen(node->r);
       asmGen(node->l);
 
-      // printf("\n# modulation\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, cqto());
@@ -511,25 +515,20 @@ void asmGen (struct ast* node) {
     case '^':
       asmGen(node->l);
 
-      // printf("\n# Negation\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, neg("%rax"));
       text = genText(text, movq("%rax", "(%rsp)"));
 
       break;
 
-    /* control flow */
-    /* null expressions allowed in the grammar, so check for them */
-
-    /* condition */
+    // condition
     case 'C':
+      // need number to assign to label for jumping
       condBranchNum = branchCount++;
 
-      // printf("\n# Condition\n");
       asmGen(((struct cond*)node)->sStmt);
       asmGen(((struct cond*)node)->fStmt);
 
-      // printf("\n# subtraction\n");
       text = genText(text, movq("(%rsp)", "%rax"));
       text = genText(text, add("$8", "%rsp"));
       text = genText(text, sub("(%rsp)", "%rax"));
@@ -549,39 +548,66 @@ void asmGen (struct ast* node) {
 
       break;
 
-    /* loop */
+    // loop
     case 'L':
       if (((struct loop*)node)->tl) {
-        // printf("\n# Loop\n");
-        
-        loopBranchNum = branchCount; //1
+
+        // need number to assign to label for jumping
+        loopBranchNum = branchCount; 
         branchCount += 2;
         
+        // keep iteration number in %rcx
         text = genText(text, push("%rcx"));
-
-        sprintf(buf, "$%ld", eval(((struct loop*)node)->from));
+        
+        // if argument 'from' is variable we need to resolve it first
+        if(((struct loop*)node)->from->nodetype == 'V') {
+          struct symasgn* tmp = (struct stmasgn*)(((struct loop*)node)->from);
+          s = lookup(tmp->s->name);
+          sprintf(buf, "-%u(%%rbp)", s->offset);
+        } else {
+          // eles just put a number
+          sprintf(buf, "$%ld", eval(((struct loop*)node)->from));
+        }
+        
         text = genText(text, (movq(buf, "%rcx")));
         sprintf(buf, "L%u", loopBranchNum);
         text = genText(text, newJump("jmp", buf));
         sprintf(buf, "L%u", loopBranchNum + 1);
         text = genText(text, newLabel(buf));
 
+        // evaluate loop body
         asmGen(((struct loop*)node)->tl);
 
         text = genText(text, add("$1", "%rcx"));
+        // if argument 'from' is variable, update it as well
+        if(((struct loop*)node)->from->nodetype == 'V') {
+          struct symasgn* tmp = (struct stmasgn*)(((struct loop*)node)->from);
+          s = lookup(tmp->s->name);
+          sprintf(buf, "-%u(%%rbp)", s->offset);
+          text = genText(text, add("$1", buf));
+        }
+        
         sprintf(buf, "L%u", loopBranchNum);
         text = genText(text, newLabel(buf));
-        sprintf(buf, "$%ld", eval(((struct loop*)node)->to) - 1);
+
+        // if argument 'to' is variable, we need to resolve it too
+        if(((struct loop*)node)->to->nodetype == 'V') {
+          struct symasgn* tmp = (struct stmasgn*)(((struct loop*)node)->to);
+          s = lookup(tmp->s->name);
+          sprintf(buf, "-%u(%%rbp)", s->offset);
+        } else {
+          sprintf(buf, "$%ld", eval(((struct loop*)node)->to));
+        }
+
         text = genText(text, cmp(buf, "%rcx"));
         sprintf(buf, "L%u", loopBranchNum + 1);
-        text = genText(text, newJump("jle", buf));
-        
+        text = genText(text, newJump("jl", buf)); 
         text = genText(text, pop("%rcx"));
       }
 
       break;
 
-    /* list of statements */
+    // block statements
     case 'B':
       asmGen(node->l);
       asmGen(node->r);
@@ -593,8 +619,8 @@ void asmGen (struct ast* node) {
 
 }
 
-void yyerror (char *s, ...)
-{
+// print error
+void yyerror (char *s, ...) {
   va_list ap;
   va_start(ap, s);
 
@@ -603,8 +629,7 @@ void yyerror (char *s, ...)
   fprintf(stderr, "\n");
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   extern FILE *yyin;
   char *asmFile;
   char *ptr;
@@ -626,6 +651,7 @@ int main(int argc, char **argv)
   *(text) = '\0';
   *(data) = '\0';
 
+  // create new file
   asmFile = strdup(argv[1]);
   ptr = strchr(asmFile, '.');
 
@@ -640,15 +666,18 @@ int main(int argc, char **argv)
 
   if (yyparse()) {
     printf("\nParsing Error\n");
-    // closeFile(fp);
     return -1;
   }
 
+  // print symbol count to file
   sprintf(buf, "$%u", (symCount + 1) * 8);
   text = genText(sub(buf, "%rsp"), text);
+  // put Bss, Data, Text section to ASM code
   putBssSec(fp, "");
   putDataSec(fp, data);
   putTextSec(fp, text);
+
+  // close file
   closeFile(fp);
 
   printf("Finished Parsing\n");
