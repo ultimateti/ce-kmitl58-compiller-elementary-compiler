@@ -10,6 +10,7 @@
   #include <string.h>
 
   static int64_t strToHex(char* s);
+  extern int errorflag;
 %}
 
 %%
@@ -38,7 +39,7 @@
 "ife"             { return (TK_IFE); }
 "von"             { return (TK_VON); }
 \n                {  }
-.                 { yyerror("Mystery character %c\n", *yytext); }
+.                 { errorflag = 1; yyerror("Mystery character %c\n", *yytext); }
 %%
 
 static int64_t strToHex(char* s) {

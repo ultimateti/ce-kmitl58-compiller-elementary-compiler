@@ -16,6 +16,8 @@ static FILE *fp;
 static char *text;
 static char *data;
 
+int errorflag;
+
 /* symbol table */
 /* hash a symbol */
 static unsigned symhash (char* sym) {
@@ -596,16 +598,16 @@ int main(int argc, char **argv) {
   *(ptr+1) = 's';
   *(ptr+2) = '\0';
 
-  fp = newFile(asmFile);
-
   printf("Start Parsing ...\n");
   printf("...\n");
   printf("...\n");
-
-  if (yyparse()) {
+  yyparse();
+  if (errorflag) {
     printf("\nParsing Error\n");
     return -1;
   }
+
+  fp = newFile(asmFile);
 
   // print symbol count to file
   sprintf(buf, "$%u", (symCount + 1) * 8);

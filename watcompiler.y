@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "watcompiler.h"
+
+extern int errorflag;
+
 %}
 
 %union {
@@ -35,7 +38,7 @@ program:
                       asmGen($2);
                       freeNode($2);
                     }
-| program error ';' { yyerrok; }
+| program error ';' { errorflag = 1; yyerrok; }
 ;
 
 stmt:
