@@ -2,13 +2,13 @@ prints "I want to draw somthing!!!\n" ;
 prints "Butterfly?\n" ;
 
 _II => 5d ;
-_AA => 1d
+_AA => 1d ;
 _MM => 0d ;
 von(0d , _II){
 	von(0d , _AA){
 		prints "*" ;
 	}
-	_BB => (_II - _AA)*2 ;
+	_BB => (_II - _AA) * 2d ;
 	von(0d , _BB){
 		prints " " ;
 	}
@@ -16,8 +16,7 @@ von(0d , _II){
 		prints "*" ;
 	}
 	prints "\n" ;
-	_AA => _AA + 1 ;
+	_AA => _AA + 1d ;
 }
-
-prints "i hope it's a butterfly\n" ;
+prints "i hope it\'s a butterfly\n" ;
 prints "END" ;

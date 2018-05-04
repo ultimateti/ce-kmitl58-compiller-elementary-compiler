@@ -17,7 +17,7 @@ von(_MM , 5d){
 	von(_AA, 5d){
 		prints "*";
 	}
-	prints "\n"
+	prints "\n" ;
 	_MM => _MM + 1d ;
 }
 

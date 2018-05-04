@@ -5,5 +5,5 @@ _BB => 2h ;
 _CC => 1d + _BB ;
 _DD => 2h * _CC ;
 _EE => 100d % 2h ;
-_FZ => ; _DD - _EE ;
+_FZ => _DD - _EE ;
 printd _AZ;
