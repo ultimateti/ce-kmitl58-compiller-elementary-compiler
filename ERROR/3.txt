@@ -1,0 +1,2 @@
+_AA => 10h
+printd _AA ;

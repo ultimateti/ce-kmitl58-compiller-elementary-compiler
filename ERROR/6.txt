@@ -1,0 +1,2 @@
+_ZZ => ZZh ;
+printd _ZZ ;

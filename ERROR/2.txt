@@ -1,0 +1,7 @@
+_AA = 10h
+
+if (_AA , 10h){
+	prints "Equal!!!" ;
+}
+
+printf ("END") ;

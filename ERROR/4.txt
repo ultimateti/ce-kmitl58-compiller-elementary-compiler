@@ -1,0 +1,7 @@
+_AA => Ah ;
+
+Von(0h , _AA){
+	prints "*" 
+}
+
+printd _AA ;

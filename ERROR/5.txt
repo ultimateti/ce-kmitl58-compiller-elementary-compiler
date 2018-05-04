@@ -1,0 +1,2 @@
+_ZZ => 10 ;
+printd _ZZ ;
