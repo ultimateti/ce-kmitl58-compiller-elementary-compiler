@@ -26,8 +26,16 @@ from:
 .LC8:
 	.string	"\n"
 .LC9:
-	.string	"i hope it\'s a butterfly\n"
+	.string	"*"
 .LC10:
+	.string	" "
+.LC11:
+	.string	"*"
+.LC12:
+	.string	"\n"
+.LC13:
+	.string	"i hope it\'s a butterfly\n"
+.LC14:
 	.string	"END"
 	.text
 	.globl	main
@@ -177,13 +185,118 @@ main:
 	cmpq	-8(%rbp), %rcx
 	jl	.L1
 	popq	%rcx
+	subq	$8, %rsp
+	movl	$4, %eax
+	movq	%rax, (%rsp)
+	movq	(%rsp), %rax
+	addq	$8, %rsp
+	movq	%rax, -16(%rbp)
+	subq	$8, %rsp
+	movq	%rax, (%rsp)
+	pushq	%rcx
+	movq	$0, %rcx
+	jmp	.L8
+.L9:
+	pushq	%rcx
+	movq	$0, %rcx
+	jmp	.L10
+.L11:
 	movl	$.LC9, %esi
 	movl	$.LC2, %edi
 	movl	$0, %eax
 	pushq	%rcx
 	call	printf
 	popq	%rcx
+	addq	$1, %rcx
+.L10:
+	cmpq	-16(%rbp), %rcx
+	jl	.L11
+	popq	%rcx
+	subq	$8, %rsp
+	movl	$2, %eax
+	movq	%rax, (%rsp)
+	movq	-16(%rbp), %rax
+	subq	$8, %rsp
+	movq	%rax, (%rsp)
+	movq	-8(%rbp), %rax
+	subq	$8, %rsp
+	movq	%rax, (%rsp)
+	movq	(%rsp), %rax
+	addq	$8, %rsp
+	subq	(%rsp), %rax
+	movq	%rax, (%rsp)
+	movq	(%rsp), %rax
+	addq	$8, %rsp
+	imulq	 (%rsp), %rax
+	movq	%rax, (%rsp)
+	movq	(%rsp), %rax
+	addq	$8, %rsp
+	movq	%rax, -32(%rbp)
+	subq	$8, %rsp
+	movq	%rax, (%rsp)
+	pushq	%rcx
+	movq	$0, %rcx
+	jmp	.L12
+.L13:
 	movl	$.LC10, %esi
+	movl	$.LC2, %edi
+	movl	$0, %eax
+	pushq	%rcx
+	call	printf
+	popq	%rcx
+	addq	$1, %rcx
+.L12:
+	cmpq	-32(%rbp), %rcx
+	jl	.L13
+	popq	%rcx
+	pushq	%rcx
+	movq	$0, %rcx
+	jmp	.L14
+.L15:
+	movl	$.LC11, %esi
+	movl	$.LC2, %edi
+	movl	$0, %eax
+	pushq	%rcx
+	call	printf
+	popq	%rcx
+	addq	$1, %rcx
+.L14:
+	cmpq	-16(%rbp), %rcx
+	jl	.L15
+	popq	%rcx
+	movl	$.LC12, %esi
+	movl	$.LC2, %edi
+	movl	$0, %eax
+	pushq	%rcx
+	call	printf
+	popq	%rcx
+	subq	$8, %rsp
+	movl	$1, %eax
+	movq	%rax, (%rsp)
+	movq	-16(%rbp), %rax
+	subq	$8, %rsp
+	movq	%rax, (%rsp)
+	movq	(%rsp), %rax
+	addq	$8, %rsp
+	subq	(%rsp), %rax
+	movq	%rax, (%rsp)
+	movq	(%rsp), %rax
+	addq	$8, %rsp
+	movq	%rax, -16(%rbp)
+	subq	$8, %rsp
+	movq	%rax, (%rsp)
+	addq	$1, %rcx
+.L8:
+	cmpq	-8(%rbp), %rcx
+	jl	.L9
+	popq	%rcx
+	movl	$.LC13, %esi
+	movl	$.LC2, %edi
+	movl	$0, %eax
+	pushq	%rcx
+	call	printf
+	popq	%rcx
+	movl	$.LC14, %esi
 	movl	$.LC2, %edi
 	movl	$0, %eax
 	pushq	%rcx
