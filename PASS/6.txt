@@ -1,0 +1,14 @@
+prints "Condition : \n" ;
+_AB => 10d ;
+_AA => ABh ;
+_XX => _AA - _AB ;
+ 
+ife (_AB , ABh){
+	prints "_AB equal ABh\n" ;
+}
+ife (_AA , ABH){
+	prints "_AA equal ABh\n" ;
+}
+prints "_AA - _AB = " ;
+printd _XX ;
+prints "\nEnd\n" ;

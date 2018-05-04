@@ -1,0 +1,4 @@
+_AA => 12d ;
+prints "The value of _AA is" ;
+printd _AA ;
+prints "\nEND PROG\n" ;

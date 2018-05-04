@@ -1,0 +1,7 @@
+_BB => 123d; 
+prints "Can we convert decimal to hex?\n"; 
+prints "Yes! with print command!\n"; 
+prints "123d to hex = "; 
+printh _BB; 
+_CC => 5Eh; prints  "\nAnd vice versa!"; 
+printd _CC; 

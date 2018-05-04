@@ -1,0 +1,4 @@
+_AZ => 17h ;
+prints "if we want to print in hex?\n" ;
+prints "It is" ;
+printh _AZ ; 

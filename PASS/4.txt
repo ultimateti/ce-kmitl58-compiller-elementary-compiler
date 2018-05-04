@@ -1,0 +1,8 @@
+prints "Condition : \n" ;
+_ZZ => 10d ;
+_AA => 10h ;
+ife(_ZZ,_AA){
+	prints "_AA equal _ZZ\n" ;
+}
+
+prints "End" ;

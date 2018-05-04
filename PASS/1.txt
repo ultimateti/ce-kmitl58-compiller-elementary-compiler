@@ -1,0 +1,7 @@
+_AA => 100d - 2h ;
+_AB => 100d + 2h ;
+_AC => 100d / 2h ;
+_AD => 100d * 2h ;
+_AE => 100d % 2h ;
+_AZ => _AA + _AB + _AC + _AD + _AE ;
+printd _AZ;

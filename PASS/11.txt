@@ -1,0 +1,24 @@
+prints "Compiler is so easy!!!\n" ; 
+
+_NN => ^10d + 11h;
+prints "print _NN in hex : ";
+printh _NN ;
+prints "\nprint _NN in dec : ";
+printd _NN ;
+
+ife (_NN, 1Bh){
+	prints "\n-----So cool!----\n" ;
+}
+
+_MM => 1d ;
+
+von(_MM , 5d){
+	_AA => _MM;
+	von(_AA, 5d){
+		prints "*";
+	}
+	prints "\n"
+	_MM => _MM + 1d ;
+}
+
+prints "\nEND.....oh not!!!\n";

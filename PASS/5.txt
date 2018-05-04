@@ -1,0 +1,6 @@
+_AB => 10d ;
+_AA => ABh ;
+_XX => _AA - _AB ;
+
+printd _XX ;
+prints "\nEnd\n" ;
