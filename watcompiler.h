@@ -5,7 +5,6 @@
 /* symbol table */
 struct symbol {             /* a variable name */
     char *name;
-    int64_t value;
     uint8_t offset;
 };
 

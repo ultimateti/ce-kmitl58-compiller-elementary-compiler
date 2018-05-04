@@ -40,7 +40,6 @@ struct symbol* lookup (char* sym) {
     // new entry
     if (!sp->name) {    
       sp->name = strdup(sym);
-      sp->value = 0;
       sp->offset = 0;
 
       ++symCount;
@@ -254,8 +253,7 @@ void freeNode (struct ast* node) {
   free(node);
 }
 
-// evaluate expression or statement
-// mostly are not used in generate ASM
+// evaluate number node
 int64_t eval (struct ast* node) {
   int64_t v;
 
@@ -269,86 +267,6 @@ int64_t eval (struct ast* node) {
     // constant
     case 'N':
       v = ((struct numval*)node)->number;
-      break;
-      
-    // variable reference
-    case 'V':
-      v = ((struct symref*)node)->s->value;
-      break;
-
-    // print decimal
-    case 'D':
-      v = eval(((struct print*)node)->arg.exp);
-      printf("%ld", v);
-      break;
-
-    // print hexadecimal
-    case 'H':
-      v = eval(((struct print*)node)->arg.exp);
-      printf("%Xh", v);
-      break;
-        
-    // print string
-    case 'S':
-      printf("%s", (((struct print*)node)->arg.ls->str));
-      break;
-        
-    // assignment
-    case '=':
-      v = ((struct symasgn*)node)->s->value = eval(((struct symasgn*)node)->v);
-      break;
-
-    // expressions
-    case '+':
-      v = eval(node->l) + eval(node->r);
-      break;
-    case '-':
-      v = eval(node->l) - eval(node->r);
-      break;
-    case '*':
-      v = eval(node->l) * eval(node->r);
-      break;
-    case '/':
-      v = eval(node->l) / eval(node->r);
-      break;
-    case '%':
-      v = eval(node->l) % eval(node->r);
-      break;
-    case '^':
-      v = -eval(node->l);
-      break;
-
-    // condition
-    case 'C':
-      v = 0; 
-
-      if (eval(((struct cond*)node)->fStmt) == eval(((struct cond*)node)->sStmt)) {
-        if (((struct cond*)node)->tl)
-          v = eval(((struct cond*)node)->tl);
-      }
-
-      break;
-
-    // loop
-    case 'L':
-      v = 0;
-
-      if (((struct loop*)node)->tl) {
-        int64_t count = eval(((struct loop*)node)->from);
-        int64_t to = eval(((struct loop*)node)->to);
-
-        while (count < to) {
-          v = eval(((struct loop*)node)->tl);
-          count++;
-        }
-      }
-
-      break;
-
-    // block statements
-    case 'B':
-      eval(node->l);
-      v = eval(node->r);
       break;
 
     default:
