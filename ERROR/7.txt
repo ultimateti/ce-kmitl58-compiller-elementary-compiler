@@ -1,2 +1,0 @@
-_AB => _AA + _AC;
-printd _AB;
