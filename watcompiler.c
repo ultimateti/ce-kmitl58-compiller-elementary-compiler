@@ -253,7 +253,7 @@ void freeNode (struct ast* node) {
   free(node);
 }
 
-// evaluate number node
+// evaluate number or statement
 int64_t eval (struct ast* node) {
   int64_t v;
 
@@ -267,6 +267,26 @@ int64_t eval (struct ast* node) {
     // constant
     case 'N':
       v = ((struct numval*)node)->number;
+      break;
+
+    // expressions
+    case '+':
+      v = eval(node->l) + eval(node->r);
+      break;
+    case '-':
+      v = eval(node->l) - eval(node->r);
+      break;
+    case '*':
+      v = eval(node->l) * eval(node->r);
+      break;
+    case '/':
+      v = eval(node->l) / eval(node->r);
+      break;
+    case '%':
+      v = eval(node->l) % eval(node->r);
+      break;
+    case '^':
+      v = -eval(node->l);
       break;
 
     default:
