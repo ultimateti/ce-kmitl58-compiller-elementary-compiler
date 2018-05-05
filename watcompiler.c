@@ -301,7 +301,7 @@ int64_t eval (struct ast* node) {
 // generate ASM code
 void asmGen (struct ast* node) {
   struct symbol *s;
-  char buf[21];
+  char buf[21], tmpbuf[21];
   uint8_t condBranchNum, loopBranchNum;
 
   if (!node) {
@@ -314,7 +314,7 @@ void asmGen (struct ast* node) {
     case 'N':
       text = genText(text, sub("$8", "%rsp"));
       sprintf(buf, "$%ld", ((struct numval*)node)->number);
-      text = genText(text, movl(buf, "%eax"));
+      text = genText(text, movq(buf, "%rax"));
       text = genText(text, movq("%rax", "(%rsp)"));
       break;
       
@@ -509,7 +509,16 @@ void asmGen (struct ast* node) {
           sprintf(buf, "$%ld", eval(((struct loop*)node)->from));
         }
         
+        // use jump label as variable to store iteration count
+        sprintf(tmpbuf, "L%u", loopBranchNum);
+        s = lookup(tmpbuf);
+        if (s->offset == 0) {
+          s->offset = (++offsetCount) * 8;
+        }
+        sprintf(tmpbuf, "-%u(%%rbp)", s->offset);
+        
         text = genText(text, (movq(buf, "%rcx")));
+        text = genText(text, (movq("%rcx", tmpbuf)));
         sprintf(buf, "L%u", loopBranchNum);
         text = genText(text, newJump("jmp", buf));
         sprintf(buf, "L%u", loopBranchNum + 1);
@@ -517,8 +526,9 @@ void asmGen (struct ast* node) {
 
         // evaluate loop body
         asmGen(((struct loop*)node)->tl);
-
+        text = genText(text, movq(tmpbuf, "%rcx"));
         text = genText(text, add("$1", "%rcx"));
+        text = genText(text, movq("%rcx", tmpbuf));
         // if argument 'from' is variable, update it as well
         if(((struct loop*)node)->from->nodetype == 'V') {
           struct symasgn* tmp = (struct stmasgn*)(((struct loop*)node)->from);
@@ -538,7 +548,6 @@ void asmGen (struct ast* node) {
         } else {
           sprintf(buf, "$%ld", eval(((struct loop*)node)->to));
         }
-
         text = genText(text, cmp(buf, "%rcx"));
         sprintf(buf, "L%u", loopBranchNum + 1);
         text = genText(text, newJump("jl", buf)); 
