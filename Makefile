@@ -9,6 +9,6 @@ clean:
 	rm watcompiler.tab.c watcompiler.lex.c watcompiler.tab.h
 
 run:
-	./watcompiler tstinput.in
-	gcc tstinput.s -o tstinput -ggdb
-	./tstinput
+	./watcompiler test.in
+	gcc test.s -o test.wat -ggdb
+	./test.wat
