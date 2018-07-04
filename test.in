@@ -1,0 +1,17 @@
+_TO => 101d;
+_FM => 2d;
+prints "Prime number from 1 to 100:\n";
+
+von(_FM, _TO) {
+  _PM => 0d;
+	_ST => 2d;
+	von(_ST, _FM) {
+		ife(0d, _FM % _ST) {
+			_PM => 1d;
+		}
+	}
+	ife (_PM, 0d) {
+		printd _FM;
+		prints " ";
+	}
+}
